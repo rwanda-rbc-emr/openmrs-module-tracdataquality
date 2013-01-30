@@ -1,0 +1,8 @@
+org.openmrs.module.tracdataquality
+org.openmrs.module.tracdataquality.extension.html
+org.openmrs.module.tracdataquality.impl
+org.openmrs.module.tracdataquality
+org.openmrs.module.tracdataquality.db
+org.openmrs.module.tracdataquality.db.hibernate
+org.openmrs.module.tracdataquality.extension.html
+org.openmrs.module.tracdataquality.web.controller
