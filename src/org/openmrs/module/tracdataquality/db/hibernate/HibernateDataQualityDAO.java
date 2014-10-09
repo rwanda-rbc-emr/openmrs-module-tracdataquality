@@ -172,7 +172,7 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		                + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
 		                + " INNER JOIN program prog on prog.program_id=pg.program_id AND prog.program_id=2"
 		                + " where ob.person_id not in"
-		                + " (select distinct obb.person_id from obs obb where obb.concept_id = ?) and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
+		                + " (select distinct obb.person_id from obs obb where obb.concept_id = ? or obb.concept_id = 2536) and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
 		query.setInteger(0, concept.getConceptId());
 		List<Integer> personIds = query.list();
 		for (Integer personId : personIds) {

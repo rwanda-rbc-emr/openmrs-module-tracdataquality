@@ -55,6 +55,7 @@ public class DataQualityAlertsController extends ParameterizableViewController {
 		try {
 			for (String key : TracDataQualityUtil.getCriteriaKeys()) {
 				DataQualityByCheckTypeController checkingDataQuality = new DataQualityByCheckTypeController();
+				
 				patientNumbers.put(key, checkingDataQuality.checkTypeController(key, "").size());
 				
 			}

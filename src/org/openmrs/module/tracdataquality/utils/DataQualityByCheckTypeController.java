@@ -254,12 +254,15 @@ public class DataQualityByCheckTypeController {
 			patients = getPatientWithNoGivenIdentifier(getGlobalProperty("patientIdentifierType.NID"));
 			DataqualityFormController.setMsgToDisplay("tracdataquality.indicator.PatientsWithoutNID");
 			log.info("bottom  patientWithNoNID");
-		} else if (programIdKey.equals("exitedPatientWithProgram")) {
+		} 
+		
+		else if (programIdKey.equals("exitedPatientWithProgram")) {
 			log.info("top  exitedPatientWithProgram");
 			List<Patient> patientsExitedFromCare = new ArrayList<Patient>();
 			List<Patient> patientWithoutProgram = new ArrayList<Patient>();
 			patientsExitedFromCare = getPatientWithAgivenConcept(getConcept(getGlobalProperty("concept.reasonExitedCare")));
 			patientWithoutProgram = getPatientWithoutProgram();
+
 			for (Patient patient : patientsExitedFromCare) {
 				if (!patientWithoutProgram.contains(patient)) {
 					patients.add(patient);
@@ -267,7 +270,10 @@ public class DataQualityByCheckTypeController {
 			}
 			DataqualityFormController.setMsgToDisplay("tracdataquality.indicator.exitedPatientWithProgram");
 			log.info("bottom  exitedPatientWithProgram");
-		} else if (programIdKey.equals("patientInAnyHIVProgramWithNoHIVTestDate")) {
+		}
+		
+		
+		else if (programIdKey.equals("patientInAnyHIVProgramWithNoHIVTestDate")) {
 			log.info("top  patientInAnyHIVProgramWithNoHIVTestDate");
 //			List<Patient> patientsHIVProgram = new ArrayList<Patient>();
 			List<Patient> patientsWithoutHIVTestDate = new ArrayList<Patient>();
@@ -484,7 +490,7 @@ public class DataQualityByCheckTypeController {
 	 * @return concept
 	 */
 	public Concept getConcept(int conceptId) {
-		//log.info("!!!!!!!!!!!!!!!!!!!!!!!!! am getting in getconcept method");
+		
 		ConceptService conceptService = Context.getConceptService();
 		Concept concept = conceptService.getConcept(conceptId);
 		return concept;
@@ -525,7 +531,9 @@ public class DataQualityByCheckTypeController {
 	 */
 	public int getGlobalProperty(String propertyName) {
 		AdministrationService administrationService = Context.getAdministrationService();
-		int propertyValue = Integer.parseInt(administrationService.getGlobalProperty(propertyName));
+		int propertyValue = 0;
+		if(propertyName!=null && !propertyName.equals(""))
+		propertyValue = Integer.parseInt(administrationService.getGlobalProperty(propertyName));
 		return propertyValue;
 	}
 	
