@@ -36,6 +36,7 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.tracdataquality.db.DataQualityDAO;
+import org.openmrs.module.tracdataquality.utils.DataQualityByCheckTypeController;
 import org.springframework.transaction.UnexpectedRollbackException;
 
 public class HibernateDataQualityDAO implements DataQualityDAO {
@@ -163,7 +164,8 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		PatientService patientService = Context.getPatientService();
 		PersonService personService = Context.getPersonService();
 		Session session = sessionFactory.getCurrentSession();
-		
+		DataQualityByCheckTypeController dataQualityByCheckTypeController = new DataQualityByCheckTypeController();
+		int transferInConcept = dataQualityByCheckTypeController.getGlobalProperty("programOver.transferredInConceptId");
 		//SQLQuery query = session.createSQLQuery("select distinct person_id from obs where person_id not in(select distinct person_id from obs where concept_id = ?) ");
 		SQLQuery query = session
 		        .createSQLQuery("select distinct ob.person_id from obs ob"
@@ -172,7 +174,7 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		                + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
 		                + " INNER JOIN program prog on prog.program_id=pg.program_id AND prog.program_id=2"
 		                + " where ob.person_id not in"
-		                + " (select distinct obb.person_id from obs obb where obb.concept_id = ? or obb.concept_id = 2536) and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
+		                + " (select distinct obb.person_id from obs obb where obb.concept_id = ? or obb.concept_id = "+transferInConcept+") and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
 		query.setInteger(0, concept.getConceptId());
 		List<Integer> personIds = query.list();
 		for (Integer personId : personIds) {

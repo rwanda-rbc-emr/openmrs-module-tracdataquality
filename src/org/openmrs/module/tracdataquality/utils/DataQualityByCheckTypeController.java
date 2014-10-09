@@ -33,6 +33,8 @@ import org.openmrs.module.tracdataquality.service.DataQualityService;
 import org.openmrs.module.tracdataquality.web.controller.DataqualityFormController;
 import org.springframework.transaction.UnexpectedRollbackException;
 
+import com.sun.corba.se.spi.servicecontext.ServiceContext;
+
 /**
  * controls dataQuality types
  */
@@ -55,6 +57,7 @@ public class DataQualityByCheckTypeController {
 		
 		List<Patient> patients = new ArrayList<Patient>();
 		List<Patient> activePatients = new ArrayList<Patient>();
+		List<Patient> patientsInHIVProgram = new ArrayList<Patient>();
 		if (programIdKey.equals("PatientsWithNoProgramsEnrollmentDates")) {
 			patients = getPatientsWithNoProgramsEnrollmentDates();
 			DataqualityFormController.setMsgToDisplay("Patients with no programs enrollment dates");
@@ -72,7 +75,7 @@ public class DataQualityByCheckTypeController {
 			DataqualityFormController.setMsgToDisplay("Patientrs without names");
 		} else if (programIdKey.equals("patientInAnyHivProgramWithoutAdmitionMode")) {
 			//log.info("top  patientInAnyHivProgramWithoutAdmitionMode");
-			List<Patient> patientsInHIVProgram = new ArrayList<Patient>();
+			patientsInHIVProgram = new ArrayList<Patient>();
 			List<Patient> patientsWithNoAdmitionMode = new ArrayList<Patient>();
 			//getting programs
 			ProgramWorkflowService programService = Context.getProgramWorkflowService();
@@ -106,18 +109,32 @@ public class DataQualityByCheckTypeController {
 			log.info("bottom  patientsWithNoHeight");
 		} else if (programIdKey.equals("patientWithNoHIVViralLoad")) {
 			log.info("top  patientWithNoHIVViralLoad");
-			Concept concept = getConcept(getGlobalProperty("concept.viralLoad"));
-			patients = getPatientWithoutAgivenConcept(concept);
+			List<Patient> patientsWithNoViralLoad = new ArrayList<Patient>();
+			Concept viralLoadConcept = getConcept(getGlobalProperty("concept.viralLoad"));
+
+			
+			ProgramWorkflowService programService = Context.getProgramWorkflowService();
+			Program hivProgram = programService.getProgram(getGlobalProperty("HIVProgramId"));
+			patientsWithNoViralLoad = getPatientWithoutAgivenConcept(viralLoadConcept);
+			
+			patientsInHIVProgram = getPatientsCurrentlyInHIVProgram(hivProgram);
+			for (Patient patient : patientsInHIVProgram) {
+				if (patientsWithNoViralLoad.contains(patient)) {
+					patients.add(patient);
+				}
+			}
 			DataqualityFormController.setMsgToDisplay("tracdataquality.indicator.patientWithNoHIVViralLoad");
 			log.info("bottom  patientWithNoHIVViralLoad");
 		} else if (programIdKey.equals("patientWithHIVPositiveAndNoCD4")) {
 			log.info("top  patientWithHIVPositiveAndNoCD4");
 			List<Patient> patientsWithNoCD4 = new ArrayList<Patient>();
-			List<Patient> patientsInHIVProgram = new ArrayList<Patient>();
+			patientsInHIVProgram = new ArrayList<Patient>();
 			Concept cd4 = getConcept(getGlobalProperty("concept.cd4_count"));
 			ProgramWorkflowService programService = Context.getProgramWorkflowService();
 			Program hivProgram = programService.getProgram(getGlobalProperty("HIVProgramId"));
+			
 			patientsWithNoCD4 = getPatientWithoutAgivenConcept(cd4);
+			
 			patientsInHIVProgram = getPatientsCurrentlyInHIVProgram(hivProgram);
 			
 			for (Patient patient : patientsInHIVProgram) {
