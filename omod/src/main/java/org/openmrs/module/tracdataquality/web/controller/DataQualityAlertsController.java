@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.tracdataquality.utils.DataQualityByCheckTypeController;
 import org.openmrs.module.tracdataquality.utils.TracDataQualityUtil;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.ParameterizableViewController;
@@ -57,7 +56,6 @@ public class DataQualityAlertsController extends ParameterizableViewController {
 				DataQualityByCheckTypeController checkingDataQuality = new DataQualityByCheckTypeController();
 				
 				patientNumbers.put(key, checkingDataQuality.checkTypeController(key, "").size());
-				
 			}
 			mav.addObject("patientNumbers", patientNumbers);
 			

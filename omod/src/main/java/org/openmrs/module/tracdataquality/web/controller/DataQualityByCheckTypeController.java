@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.tracdataquality.utils;
+package org.openmrs.module.tracdataquality.web.controller;
 
 import java.util.*;
 
@@ -30,7 +30,7 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.ProgramWorkflowService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.tracdataquality.service.DataQualityService;
-import org.openmrs.module.tracdataquality.web.controller.DataqualityFormController;
+import org.openmrs.module.tracdataquality.utils.PatientSortByName;
 import org.springframework.transaction.UnexpectedRollbackException;
 
 import com.sun.corba.se.spi.servicecontext.ServiceContext;
@@ -506,10 +506,9 @@ public class DataQualityByCheckTypeController {
 	 * @param conceptId
 	 * @return concept
 	 */
-	public Concept getConcept(int conceptId) {
+	public Concept getConcept(Integer conceptId) {
+		Concept concept = conceptId != null ? Context.getConceptService().getConcept(conceptId) : null;
 		
-		ConceptService conceptService = Context.getConceptService();
-		Concept concept = conceptService.getConcept(conceptId);
 		return concept;
 	}
 	
@@ -546,11 +545,13 @@ public class DataQualityByCheckTypeController {
 	 * @param propertyName
 	 * @return propertyValue
 	 */
-	public int getGlobalProperty(String propertyName) {
+	public Integer getGlobalProperty(String propertyName) {
 		AdministrationService administrationService = Context.getAdministrationService();
-		int propertyValue = 0;
-		if(propertyName!=null && !propertyName.equals(""))
-		propertyValue = Integer.parseInt(administrationService.getGlobalProperty(propertyName));
+		Integer propertyValue = null;
+		if(propertyName!=null && !propertyName.equals("")) {
+			String propValue = administrationService.getGlobalProperty(propertyName);
+					propertyValue = propValue != null ? Integer.parseInt(propValue) : null;
+		}
 		return propertyValue;
 	}
 	

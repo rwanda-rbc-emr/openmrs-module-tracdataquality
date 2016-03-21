@@ -36,7 +36,6 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.tracdataquality.db.DataQualityDAO;
-import org.openmrs.module.tracdataquality.utils.DataQualityByCheckTypeController;
 import org.springframework.transaction.UnexpectedRollbackException;
 
 public class HibernateDataQualityDAO implements DataQualityDAO {
@@ -124,38 +123,35 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 	@SuppressWarnings("unchecked")
 	public List<Patient> getPatientsWithoutAnObs(Concept concept) {
 		ArrayList<Patient> patientList = new ArrayList<Patient>();
-		PatientService patientService = Context.getPatientService();
-		PersonService personService = Context.getPersonService();
-		Session session = sessionFactory.getCurrentSession();
-		
-		//SQLQuery query = session.createSQLQuery("select distinct person_id from obs where person_id not in(select distinct person_id from obs where concept_id = ?) ");
-		SQLQuery query = session
-		        .createSQLQuery("select distinct ob.person_id from obs ob"
-		                + " INNER JOIN person s on s.person_id=ob.person_id"
-		                + " INNER JOIN patient p on s.person_id=p.patient_id"
-		                + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
-		                + " INNER JOIN program prog on prog.program_id=pg.program_id AND (prog.program_id=1 OR prog.program_id=2)"
-		                + " where ob.person_id not in"
-		                + " (select distinct obb.person_id from obs obb where obb.concept_id = ?) and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
-		query.setInteger(0, concept.getConceptId());
-		List<Integer> personIds = query.list();
-		for (Integer personId : personIds) {
-			try {
-				if (personService.getPerson(personId).isPatient() && !(patientService.getPatient(personId) == null)) {
-					patientList.add(patientService.getPatient(personId));
+		if (concept != null) {
+			PatientService patientService = Context.getPatientService();
+			PersonService personService = Context.getPersonService();
+			Session session = sessionFactory.getCurrentSession();
+			//SQLQuery query = session.createSQLQuery("select distinct person_id from obs where person_id not in(select distinct person_id from obs where concept_id = ?) ");
+			SQLQuery query = session.createSQLQuery("select distinct ob.person_id from obs ob"
+					+ " INNER JOIN person s on s.person_id=ob.person_id"
+					+ " INNER JOIN patient p on s.person_id=p.patient_id"
+					+ " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
+					+ " INNER JOIN program prog on prog.program_id=pg.program_id AND (prog.program_id=1 OR prog.program_id=2)"
+					+ " where ob.person_id not in"
+					+ " (select distinct obb.person_id from obs obb where obb.concept_id = ?) and pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
+			query.setInteger(0, concept.getConceptId());
+			List<Integer> personIds = query.list();
+			for (Integer personId : personIds) {
+				try {
+					if (personService.getPerson(personId).isPatient()
+							&& !(patientService.getPatient(personId) == null)) {
+						patientList.add(patientService.getPatient(personId));
+					}
+				} catch (ObjectNotFoundException onfe) {
+					log.info("patient with id " + personId + "  not found");
+				} catch (UnexpectedRollbackException pae) {
+					log.info("roll back exception when trying to load patient " + personId);
+				} catch (PropertyAccessException pae) {
+					log.info("property access exception when trying to load patient " + personId);
 				}
-			}
-			catch (ObjectNotFoundException onfe) {
-				log.info("patient with id " + personId + "  not found");
-			}
-			catch (UnexpectedRollbackException pae) {
-				log.info("roll back exception when trying to load patient " + personId);
-			}
-			catch (PropertyAccessException pae) {
-				log.info("property access exception when trying to load patient " + personId);
-			}
+			} 
 		}
-		
 		return patientList;
 	}
 	
@@ -164,8 +160,7 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		PatientService patientService = Context.getPatientService();
 		PersonService personService = Context.getPersonService();
 		Session session = sessionFactory.getCurrentSession();
-		DataQualityByCheckTypeController dataQualityByCheckTypeController = new DataQualityByCheckTypeController();
-		int transferInConcept = dataQualityByCheckTypeController.getGlobalProperty("programOver.transferredInConceptId");
+		int transferInConcept = getGlobalProperty("programOver.transferredInConceptId");
 		//SQLQuery query = session.createSQLQuery("select distinct person_id from obs where person_id not in(select distinct person_id from obs where concept_id = ?) ");
 		SQLQuery query = session
 		        .createSQLQuery("select distinct ob.person_id from obs ob"
@@ -343,13 +338,13 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 	@SuppressWarnings("unchecked")
 	public List<Integer> getPatientsWithoutStartDate() {
 		Session session = sessionFactory.getCurrentSession();
-		//SQLQuery query = session.createSQLQuery("select distinct patient_id from orders where start_date is null and voided=0");
+		//SQLQuery query = session.createSQLQuery("select distinct patient_id from orders where date_activated is null and voided=0");
 		
 		SQLQuery query = session.createSQLQuery("select distinct ord.patient_id from orders ord"
 		        + " INNER JOIN patient p on ord.patient_id=p.patient_id"
 		        + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
 		        + " INNER JOIN program prog on prog.program_id=pg.program_id "
-		        + " where start_date is null and ord.voided=0 AND (prog.program_id=1 OR prog.program_id=2)"
+		        + " where date_activated is null and ord.voided=0 AND (prog.program_id=1 OR prog.program_id=2)"
 		        + " AND pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
 		
 		List<Integer> patientIds = query.list();
@@ -366,13 +361,13 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 	public List<Integer> getPatinetsWithDiscontinuedDateHigherThanDrugStartDate() {
 		Session session = sessionFactory.getCurrentSession();
 		/*SQLQuery query = session
-		.createSQLQuery("select distinct patient_id from orders where discontinued_date < start_date and discontinued_date is not null and voided=0;");*/
+		.createSQLQuery("select distinct patient_id from orders where date_stopped < date_activated and date_stopped is not null and voided=0;");*/
 
 		SQLQuery query = session.createSQLQuery("select distinct ord.patient_id from orders ord"
 		        + " INNER JOIN patient p on ord.patient_id=p.patient_id"
 		        + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
 		        + " INNER JOIN program prog on prog.program_id=pg.program_id"
-		        + " where discontinued_date < start_date and ord.discontinued_date is not null and ord.voided=0"
+		        + " where date_stopped < date_activated and ord.date_stopped is not null and ord.voided=0"
 		        + " AND (prog.program_id=1 OR prog.program_id=2)"
 		        + " AND pg.date_completed is null and p.voided = 0 and pg.voided = 0 ;");
 		List<Integer> patientIds = query.list();
@@ -388,14 +383,14 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 	public List<Integer> getPatientsDrugsWithDiscontinuedDateWithoutStartDate() {
 		Session session = sessionFactory.getCurrentSession();
 		/*SQLQuery query = session
-		.createSQLQuery("select distinct patient_id from orders where start_date is null and discontinued_date is not null and voided=0;");*/
+		.createSQLQuery("select distinct patient_id from orders where date_activated is null and date_stopped is not null and voided=0;");*/
 
 		SQLQuery query = session
 		        .createSQLQuery("select distinct ord.patient_id from orders ord"
 		                + " INNER JOIN patient p on ord.patient_id=p.patient_id"
 		                + " INNER JOIN patient_program pg on pg.patient_id=p.patient_id"
 		                + " INNER JOIN program prog on prog.program_id=pg.program_id"
-		                + " where start_date is null and ord.discontinued_date is not null and ord.voided=0 AND (prog.program_id=1 OR prog.program_id=2)"
+		                + " where date_activated is null and ord.date_stopped is not null and ord.voided=0 AND (prog.program_id=1 OR prog.program_id=2)"
 		                + " AND pg.date_completed is  null and p.voided = 0 and pg.voided = 0 ;");
 		
 		List<Integer> patientIds = query.list();
@@ -476,12 +471,6 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		
 	}
 	
-	public int getGlobalProperty(String propertyName) {
-		AdministrationService administrationService = Context.getAdministrationService();
-		int propertyValue = Integer.parseInt(administrationService.getGlobalProperty(propertyName));
-		return propertyValue;
-	}
-	
 	/**
 	 * @see org.openmrs.module.tracdataquality.db.DataQualityDAO#getPatientsByProgram(org.openmrs.Program)
 	 */
@@ -533,11 +522,19 @@ public class HibernateDataQualityDAO implements DataQualityDAO {
 		List<Integer> patientIds = new ArrayList<Integer>();
 		Session session = sessionFactory.getCurrentSession();
 		SQLQuery query = session
-		        .createSQLQuery("select distinct patient_id from orders where discontinued_date is not null and discontinued_reason is null and voided=0");
+		        .createSQLQuery("select distinct patient_id from orders where date_stopped is not null and order_reason is null and voided=0");
+		
 		for (int i = 0; i < query.list().size(); i++) {
-			
 			patientIds.add((Integer) query.list().get(i));
 		}
 		return patientIds;
+	}
+	
+	private int getGlobalProperty(String propertyName) {
+		AdministrationService administrationService = Context.getAdministrationService();
+		int propertyValue = 0;
+		if(propertyName!=null && !propertyName.equals(""))
+		propertyValue = Integer.parseInt(administrationService.getGlobalProperty(propertyName));
+		return propertyValue;
 	}
 }

@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.openmrs.Patient;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.tracdataquality.utils.ContextProvider;
-import org.openmrs.module.tracdataquality.utils.DataQualityByCheckTypeController;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
 import org.springframework.web.servlet.view.RedirectView;

@@ -15,10 +15,10 @@ package org.openmrs.module.tracdataquality;
 
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.openmrs.module.Extension.MEDIA_TYPE;
 import org.openmrs.module.tracdataquality.extension.html.AdminList;
+
+import junit.framework.TestCase;
 
 /**
  * This test validates the AdminList extension class

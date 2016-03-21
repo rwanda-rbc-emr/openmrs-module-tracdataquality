@@ -28,6 +28,13 @@
 			<artifactId>openmrs-web</artifactId>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+		    <groupId>org.openmrs.test</groupId>
+		    <artifactId>openmrs-test</artifactId>
+		    <version>${openMRSVersion}</version>
+		    <type>pom</type>
+		    <scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
