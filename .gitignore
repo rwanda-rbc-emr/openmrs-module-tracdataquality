@@ -9,3 +9,5 @@ omod/.classpath
 omod/.gitignore
 omod/.project
 omod/.settings/
+api/bin/
+omod/bin/
